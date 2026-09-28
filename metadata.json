@@ -1,0 +1,6 @@
+{
+  "name": "Meridian Career Architecture",
+  "description": "AI-driven career roadmap generator that builds personalized technical learning paths calibrated to current skill profiles and real-time industry demand.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
