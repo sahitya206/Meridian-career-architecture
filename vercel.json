@@ -1,4 +1,9 @@
 {
+  "build": {
+    "env": {
+      "VITE_CONFIG_NATIVE_IGNORE_WARNING": "true"
+    }
+  },
   "rewrites": [
     {
       "source": "/api/(.*)",
