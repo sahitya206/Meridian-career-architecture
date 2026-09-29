@@ -37,9 +37,81 @@ const sharedRoadmaps = new Map<
 
 app.use(express.json({ limit: '2mb' }));
 
+const N8N_CHAT_WEBHOOK_URL =
+  process.env.N8N_CHAT_WEBHOOK_URL ||
+  'https://sahitya-2506.app.n8n.cloud/webhook/36fb15fa-9d05-40e7-a11f-aebe4cb4f71a/chat';
+
 // Health check endpoint
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// n8n Chat Webhook Proxy Endpoint (prevents browser CORS issues)
+app.post('/api/n8n/chat', async (req, res) => {
+  try {
+    const {
+      chatInput,
+      sessionId = `meridian_${Date.now()}`,
+      action = 'sendMessage',
+      metadata = {},
+    } = req.body || {};
+
+    if (!chatInput || typeof chatInput !== 'string') {
+      res.status(400).json({ error: 'chatInput is required.' });
+      return;
+    }
+
+    const upstreamResponse = await fetch(N8N_CHAT_WEBHOOK_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify({
+        action,
+        sessionId,
+        chatInput,
+        metadata,
+      }),
+    });
+
+    const contentType = upstreamResponse.headers.get('content-type') || '';
+    if (!upstreamResponse.ok) {
+      const errorText = await upstreamResponse.text();
+      res.status(upstreamResponse.status).json({
+        error: `n8n webhook returned HTTP ${upstreamResponse.status}: ${errorText.slice(0, 240)}`,
+      });
+      return;
+    }
+
+    if (contentType.includes('application/json')) {
+      const data = await upstreamResponse.json();
+      const normalized = Array.isArray(data) ? data[0] : data;
+      const outputText =
+        normalized?.output ||
+        normalized?.text ||
+        normalized?.message ||
+        normalized?.response ||
+        (typeof normalized === 'string' ? normalized : JSON.stringify(normalized));
+
+      res.json({
+        output: outputText,
+        raw: data,
+        sessionId,
+      });
+    } else {
+      const text = await upstreamResponse.text();
+      res.json({
+        output: text,
+        sessionId,
+      });
+    }
+  } catch (err: unknown) {
+    console.error('Error communicating with n8n chat webhook:', err);
+    const message =
+      err instanceof Error ? err.message : 'Failed to reach n8n chat webhook.';
+    res.status(500).json({ error: message });
+  }
 });
 
 // Create a temporary shareable link ID for a roadmap

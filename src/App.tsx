@@ -29,6 +29,7 @@ import {
   BENCHMARK_ROADMAPS,
   INITIAL_USER_SKILLS,
 } from './data/benchmarkRoadmaps';
+import { N8nCareerChat } from './components/N8nCareerChat';
 
 import heroImageUrl from './assets/images/hero_career_architecture_1790582003360.jpg';
 import avatarLeadUrl from './assets/images/avatar_mentor_lead_1790582026936.jpg';
@@ -103,6 +104,9 @@ export default function App() {
   const [shareableUrl, setShareableUrl] = useState<string>('');
   const [shareExpiresAt, setShareExpiresAt] = useState<string | null>(null);
   const [copiedField, setCopiedField] = useState<'link' | 'snippet' | null>(null);
+
+  // n8n Career Advisor Chat Drawer State
+  const [isChatOpen, setIsChatOpen] = useState<boolean>(false);
 
   // Load shared roadmap from URL query parameter if present
   useEffect(() => {
@@ -738,6 +742,14 @@ export default function App() {
                   className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white border border-white/30 rounded-lg hover:bg-white/10 transition-colors whitespace-nowrap cursor-pointer"
                 >
                   <span>Inspect Live Hiring Signals</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsChatOpen(true)}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-sky-200 border border-sky-400/40 bg-sky-950/50 rounded-lg hover:bg-sky-900/60 transition-colors whitespace-nowrap cursor-pointer"
+                >
+                  <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                  <span>Ask AI Career Advisor</span>
                 </button>
               </div>
             </div>
@@ -1808,6 +1820,13 @@ export default function App() {
             </button>
             <button
               type="button"
+              onClick={() => setIsChatOpen(true)}
+              className="hover:text-slate-900 transition-colors cursor-pointer"
+            >
+              AI Career Chat
+            </button>
+            <button
+              type="button"
               onClick={handleExportRoadmap}
               className="text-slate-800 font-semibold hover:underline cursor-pointer"
             >
@@ -1816,6 +1835,14 @@ export default function App() {
           </div>
         </div>
       </footer>
+
+      {/* n8n Webhook Career Advisor Chat Widget */}
+      <N8nCareerChat
+        activeRoadmap={activeRoadmap}
+        weeklyHours={weeklyHours}
+        isOpen={isChatOpen}
+        onToggleOpen={setIsChatOpen}
+      />
     </div>
   );
 }
